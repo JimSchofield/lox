@@ -1,5 +1,11 @@
 import { argv } from "process";
 import fs from "fs";
+import readline from "readline";
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
 class Lox {
   constructor() {
@@ -14,19 +20,32 @@ class Lox {
   }
 
   runFile(file: string) {
-    console.log(`Running file: ${file}`);
+    console.log(`Running file: ${file}\n`);
 
-    const contents = fs.readFileSync(file, "utf-8");
+    try {
+      const contents = fs.readFileSync(file, "utf-8");
 
-    this.run(contents);
+      this.run(contents);
+    } catch (e) {
+      console.error("\nError! Make sure the file exists\n");
+      console.log(e);
+      process.exit(1);
+    }
   }
 
   runPrompt() {
-    console.log("Running prompt");
+    rl.question("> ", (value) => {
+      if (!value) {
+        process.exit(1);
+      } else {
+        this.run(value);
+        this.runPrompt();
+      }
+    });
   }
 
   run(script: string) {
-    console.log(script);
+    console.log(`running...${script}`);
   }
 }
 
