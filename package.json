@@ -7,6 +7,7 @@
     "build": "tsc",
     "watch": "npm run build -- -w",
     "start": "ts-node ./src/index.ts",
+    "generate-ast" : "ts-node ./src/tools/generateAST.ts",
     "debug": "node --inspect ./node_modules/ts-node/dist/bin.js ./src/index.ts",
     "tsnode": "ts-node ./src/index.ts --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
