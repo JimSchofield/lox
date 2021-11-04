@@ -27,8 +27,11 @@ class GenerateAST {
 
     const writer = fs.createWriteStream(destPath, "utf-8");
 
-    writer.write(`import Token, { LiteralType } from "./token";\n\n`, () => {
-      writer.write(`abstract class ${baseName} {}\n`);
+    writer.write(`import Token, { LiteralType } from "./token";\n\n`);
+    this.defineVisitors(writer, baseName, types)
+    writer.write(`abstract class ${baseName} {\n`);
+    writer.write(`  abstract accept<R>(visitor: Visitor<R>): R;\n`);
+    writer.write(`}\n`, () => {
       for (const type of types) {
         const className = type.split(":")[0].trim();
         const fields = type.split(":")[1].trim();
@@ -38,6 +41,21 @@ class GenerateAST {
 
       writer.end();
     });
+  }
+
+  private defineVisitors(
+    writer: fs.WriteStream,
+    baseName: string,
+    types: string[]
+  ) {
+    writer.write(`export interface Visitor<R> {\n`);
+    for (const type of types) {
+      const typeName = type.split(":")[0].trim();
+      writer.write(
+        `  visit${typeName}${baseName}<R>(${baseName.toLowerCase()}: ${typeName}): R;\n`
+      );
+    }
+    writer.write(`}\n\n`);
   }
 
   private defineType(
@@ -73,6 +91,10 @@ class GenerateAST {
     writer.write("  }\n");
 
     writer.write("\n");
+
+    writer.write("  accept<R>(visitor: Visitor<R>): R {\n");
+    writer.write(`    return visitor.visit${className}${baseName}(this);\n`);
+    writer.write("  }\n\n");
 
     // Fields.
     for (const [type, name] of fieldPairs) {
