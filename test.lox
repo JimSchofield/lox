@@ -1,3 +1,5 @@
-Testing the file!
+var thing = (5 + 3) / 2;
 
-YAY!
+if (thing >=2 ) {
+  print("It works!");
+}

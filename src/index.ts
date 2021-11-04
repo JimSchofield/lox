@@ -1,13 +1,16 @@
 import { argv } from "process";
 import fs from "fs";
 import readline from "readline";
+import Scanner from "./scanner";
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
-class Lox {
+export default class Lox {
+  static hadError = false;
+
   constructor() {
     if (argv.length > 3) {
       console.log("Usage: jlox [script]");
@@ -19,33 +22,54 @@ class Lox {
     }
   }
 
-  runFile(file: string) {
+  runFile(file: string): void {
     console.log(`Running file: ${file}\n`);
 
-    try {
-      const contents = fs.readFileSync(file, "utf-8");
+    let contents: string;
 
-      this.run(contents);
+    try {
+      contents = fs.readFileSync(file, "utf-8");
     } catch (e) {
+      Lox.hadError = true;
+
       console.error("\nError! Make sure the file exists\n");
       console.log(e);
+
       process.exit(1);
     }
+
+    this.run(contents);
+    process.exit(1);
   }
 
-  runPrompt() {
+  runPrompt(): void {
     rl.question("> ", (value) => {
       if (!value) {
         process.exit(1);
       } else {
         this.run(value);
+
+        Lox.hadError = false;
+
         this.runPrompt();
       }
     });
   }
 
-  run(script: string) {
-    console.log(`running...${script}`);
+  run(source: string): void {
+    const scanner = new Scanner(source);
+    const tokens = scanner.scanTokens();
+
+    tokens.forEach((token) => console.log(token));
+  }
+
+  static error(line: number, message: string): void {
+    this.report(line, "", message);
+  }
+
+  static report(line: number, where: string, message: string): void {
+    console.log("[line " + line + "] Error" + where + ": " + message);
+    this.hadError = true;
   }
 }
 
