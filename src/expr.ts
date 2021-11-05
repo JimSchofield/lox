@@ -1,13 +1,13 @@
 import Token, { LiteralType } from "./token";
 
 export interface Visitor<R> {
-  visitBinaryExpr<R>(expr: Binary): R;
-  visitGroupingExpr<R>(expr: Grouping): R;
-  visitLiteralExpr<R>(expr: Literal): R;
-  visitUnaryExpr<R>(expr: Unary): R;
+  visitBinaryExpr(expr: Binary): R;
+  visitGroupingExpr(expr: Grouping): R;
+  visitLiteralExpr(expr: Literal): R;
+  visitUnaryExpr(expr: Unary): R;
 }
 
-abstract class Expr {
+export abstract class Expr {
   abstract accept<R>(visitor: Visitor<R>): R;
 }
 

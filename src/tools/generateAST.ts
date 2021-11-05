@@ -29,7 +29,7 @@ class GenerateAST {
 
     writer.write(`import Token, { LiteralType } from "./token";\n\n`);
     this.defineVisitors(writer, baseName, types)
-    writer.write(`abstract class ${baseName} {\n`);
+    writer.write(`export abstract class ${baseName} {\n`);
     writer.write(`  abstract accept<R>(visitor: Visitor<R>): R;\n`);
     writer.write(`}\n`, () => {
       for (const type of types) {
@@ -52,7 +52,7 @@ class GenerateAST {
     for (const type of types) {
       const typeName = type.split(":")[0].trim();
       writer.write(
-        `  visit${typeName}${baseName}<R>(${baseName.toLowerCase()}: ${typeName}): R;\n`
+        `  visit${typeName}${baseName}(${baseName.toLowerCase()}: ${typeName}): R;\n`
       );
     }
     writer.write(`}\n\n`);

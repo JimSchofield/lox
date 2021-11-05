@@ -5,13 +5,13 @@ export type LiteralType = number | string;
 export default class Token {
   readonly type: TokenType;
   readonly lexeme: string;
-  readonly literal: LiteralType;
+  readonly literal: LiteralType | null;
   readonly line: number;
 
   constructor(
     type: TokenType,
     lexeme: string,
-    literal: LiteralType,
+    literal: LiteralType | null,
     line: number
   ) {
     this.type = type;
