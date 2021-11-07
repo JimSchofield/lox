@@ -2,6 +2,10 @@ import { argv } from "process";
 import fs from "fs";
 import readline from "readline";
 import Scanner from "./scanner";
+import Token from "./token";
+import { TokenType } from "./tokenTypes";
+import { Parser } from "./parser";
+import Interpreter from "./interpreter";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -10,6 +14,7 @@ const rl = readline.createInterface({
 
 export default class Lox {
   static hadError = false;
+  interpreter = new Interpreter();
 
   constructor() {
     if (argv.length > 3) {
@@ -60,11 +65,24 @@ export default class Lox {
     const scanner = new Scanner(source);
     const tokens = scanner.scanTokens();
 
-    tokens.forEach((token) => console.log(token));
+    const parser = new Parser(tokens);
+    const expressions = parser.parse();
+
+    if (expressions !== null) {
+      this.interpreter.interpret(expressions);
+    }
   }
 
   static error(line: number, message: string): void {
     this.report(line, "", message);
+  }
+
+  static errorWithToken(token: Token, message: string): void {
+    if (token.type == TokenType.EOF) {
+      this.report(token.line, " at end", message);
+    } else {
+      this.report(token.line, " at '" + token.lexeme + "'", message);
+    }
   }
 
   static report(line: number, where: string, message: string): void {
