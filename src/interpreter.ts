@@ -1,10 +1,11 @@
 import Lox from ".";
-import { Binary, Expr, Grouping, Literal, Unary, Visitor } from "./expr";
+import { Binary, Expr, Grouping, Literal, Unary, Visitor as ExprVisitor } from "./expr";
 import RuntimeError from "./runtimeError";
+import { Expression as ExprStmt, Print as PrintStmt, Stmt, Visitor as StmtVisitor } from "./stmt";
 import Token, { LiteralType } from "./token";
 import { TokenType } from "./tokenTypes";
 
-export default class Interpreter implements Visitor<LiteralType> {
+export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisitor<void> {
   public visitLiteralExpr(expr: Literal): LiteralType {
     return expr.value;
   }
@@ -115,13 +116,18 @@ export default class Interpreter implements Visitor<LiteralType> {
     throw new RuntimeError(operator, "Operands must be numbers.");
   }
 
-  public interpret(expression: Expr): void { 
+  public interpret(statements: Stmt[]): void {
     try {
-      const value = this.evaluate(expression);
-      console.log(this.stringify(value));
+      for (const statement of statements) {
+        this.execute(statement);
+      }
     } catch (error) {
       Lox.errorWithToken((error as RuntimeError).token, (error as RuntimeError).message);
     }
+  }
+
+  private execute(stmt: Stmt): void {
+    stmt.accept(this);
   }
   
   private stringify(obj: LiteralType): string {
@@ -132,5 +138,14 @@ export default class Interpreter implements Visitor<LiteralType> {
     }
 
     return obj.toString();
+  }
+  
+  public visitExpressionStmt(stmt: ExprStmt): void {
+    this.evaluate(stmt.expression);
+  }
+
+  public visitPrintStmt(stmt: PrintStmt): void {
+    const value = this.evaluate(stmt.expression);
+    console.log(this.stringify(value));
   }
 }
