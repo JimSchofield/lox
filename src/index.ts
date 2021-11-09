@@ -15,8 +15,8 @@ const rl = readline.createInterface({
 export default class Lox {
   static hadError = false;
   interpreter = new Interpreter();
-
   constructor() {
+
     if (argv.length > 3) {
       console.log("Usage: jlox [script]");
       process.exit(1);

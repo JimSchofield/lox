@@ -1,11 +1,14 @@
 import Lox from ".";
-import { Binary, Expr, Grouping, Literal, Unary, Visitor as ExprVisitor } from "./expr";
+import Environment from "./environment";
+import { Assign, Binary, Expr, Grouping, Literal, Unary, Variable, Visitor as ExprVisitor } from "./expr";
 import RuntimeError from "./runtimeError";
-import { Expression as ExprStmt, Print as PrintStmt, Stmt, Visitor as StmtVisitor } from "./stmt";
+import { Block, Expression as ExprStmt, Print as PrintStmt, Stmt, Var, Visitor as StmtVisitor } from "./stmt";
 import Token, { LiteralType } from "./token";
 import { TokenType } from "./tokenTypes";
 
 export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisitor<void> {
+  private environment = new Environment();
+
   public visitLiteralExpr(expr: Literal): LiteralType {
     return expr.value;
   }
@@ -16,6 +19,42 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
 
   private evaluate(expr: Expr): LiteralType {
     return expr.accept(this);
+  }
+
+  public visitBlockStmt(stmt: Block): void {
+    this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  public executeBlock(statements: Stmt[], environment: Environment) {
+    const previous = this.environment;
+    try {
+      this.environment = environment;
+
+      for (const statement of statements) {
+        this.execute(statement);
+      }
+    } finally {
+      this.environment = previous;
+    } 
+  }
+
+  public visitAssignExpr(expr: Assign): LiteralType {
+    const value = this.evaluate(expr.value);
+    this.environment.assign(expr.name, value);
+    return value;
+  }
+
+  public visitVarStmt(stmt: Var ): void {
+    let value = null;
+    if (stmt.initializer != null) {
+      value = this.evaluate(stmt.initializer);
+    }
+
+    this.environment.define(stmt.name.lexeme, value);
+  }
+
+  public visitVariableExpr(expr: Variable): any {
+    return this.environment.get(expr.name);
   }
 
   public visitUnaryExpr(expr: Unary): LiteralType {

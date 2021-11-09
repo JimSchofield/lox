@@ -11,15 +11,21 @@ class GenerateAST {
     const outputDir = process.argv[2];
 
     this.defineAst(outputDir, "Expr", [
+      "Assign   : Token name, Expr value",
       "Binary   : Expr left, Token operator, Expr right",
       "Grouping : Expr expression",
       "Literal  : LiteralType value",
       "Unary    : Token operator, Expr right",
+      "Variable : Token name",
     ]);
 
     this.defineAst(outputDir, "Stmt", [
+      "Block      : Stmt[] statements",
+      "If         : Expr condition, Stmt thenBranch," +
+                  " Stmt elseBranch",
       "Expression : Expr expression",
       "Print      : Expr expression",
+      "Var        : Token name, Expr|null initializer",
     ]);
   }
 
