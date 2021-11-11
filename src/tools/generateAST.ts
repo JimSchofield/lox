@@ -22,7 +22,7 @@ class GenerateAST {
     this.defineAst(outputDir, "Stmt", [
       "Block      : Stmt[] statements",
       "If         : Expr condition, Stmt thenBranch," +
-                  " Stmt elseBranch",
+                  " Stmt|null elseBranch",
       "Expression : Expr expression",
       "Print      : Expr expression",
       "Var        : Token name, Expr|null initializer",

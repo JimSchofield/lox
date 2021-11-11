@@ -1,5 +1,5 @@
-import {Expr} from "./expr";
-import Token, { LiteralType } from "./token";
+import { Expr } from "./expr";
+import Token from "./token";
 
 export interface Visitor<R> {
   visitBlockStmt(stmt: Block): R;
@@ -27,7 +27,7 @@ export class Block extends Stmt {
 }
 
 export class If extends Stmt {
-  constructor(condition: Expr, thenBranch: Stmt, elseBranch: Stmt) {
+  constructor(condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null) {
     super();
     this.condition = condition;
     this.thenBranch = thenBranch;
@@ -40,7 +40,7 @@ export class If extends Stmt {
 
   condition: Expr;
   thenBranch: Stmt;
-  elseBranch: Stmt;
+  elseBranch: Stmt | null;
 }
 
 export class Expression extends Stmt {
@@ -70,7 +70,7 @@ export class Print extends Stmt {
 }
 
 export class Var extends Stmt {
-  constructor(name: Token, initializer: Expr|null) {
+  constructor(name: Token, initializer: Expr | null) {
     super();
     this.name = name;
     this.initializer = initializer;
@@ -81,5 +81,5 @@ export class Var extends Stmt {
   }
 
   name: Token;
-  initializer: Expr|null;
+  initializer: Expr | null;
 }

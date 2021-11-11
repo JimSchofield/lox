@@ -1,4 +1,4 @@
-import { Binary, Expr, Grouping, Literal, Unary, Visitor } from "./expr";
+/*import { Binary, Expr, Grouping, Literal, Unary, Visitor } from "./expr";
 import Token from "./token";
 import { TokenType } from "./tokenTypes";
 
@@ -53,4 +53,4 @@ class Test {
   }
 }
 
-new Test();
+new Test();*/

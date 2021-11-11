@@ -2,7 +2,7 @@ import Lox from ".";
 import Environment from "./environment";
 import { Assign, Binary, Expr, Grouping, Literal, Unary, Variable, Visitor as ExprVisitor } from "./expr";
 import RuntimeError from "./runtimeError";
-import { Block, Expression as ExprStmt, Print as PrintStmt, Stmt, Var, Visitor as StmtVisitor } from "./stmt";
+import { Block, Expression as ExprStmt, If as IfStmt, Print as PrintStmt, Stmt, Var, Visitor as StmtVisitor } from "./stmt";
 import Token, { LiteralType } from "./token";
 import { TokenType } from "./tokenTypes";
 
@@ -181,6 +181,16 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
   
   public visitExpressionStmt(stmt: ExprStmt): void {
     this.evaluate(stmt.expression);
+  }
+
+  public visitIfStmt(stmt: IfStmt): void{
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch) {
+      this.execute(stmt.elseBranch);
+    }
+
+    return;
   }
 
   public visitPrintStmt(stmt: PrintStmt): void {
