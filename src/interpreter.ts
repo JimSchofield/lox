@@ -1,6 +1,6 @@
 import Lox from ".";
 import Environment from "./environment";
-import { Assign, Binary, Expr, Grouping, Literal, Unary, Variable, Visitor as ExprVisitor } from "./expr";
+import { Assign, Binary, Expr, Grouping, Literal, Logical, Unary, Variable, Visitor as ExprVisitor } from "./expr";
 import RuntimeError from "./runtimeError";
 import { Block, Expression as ExprStmt, If as IfStmt, Print as PrintStmt, Stmt, Var, Visitor as StmtVisitor } from "./stmt";
 import Token, { LiteralType } from "./token";
@@ -11,6 +11,18 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
 
   public visitLiteralExpr(expr: Literal): LiteralType {
     return expr.value;
+  }
+
+  public visitLogicalExpr(expr: Logical): LiteralType {
+    const left = this.evaluate(expr.left);
+
+    if (expr.operator.type == TokenType.OR) {
+      if (this.isTruthy(left)) return left;
+    } else {
+      if (!this.isTruthy(left)) return left;
+    }
+
+    return this.evaluate(expr.right);
   }
 
   public visitGroupingExpr(expr: Grouping): LiteralType {

@@ -5,6 +5,7 @@ import {
   Expr,
   Grouping,
   Literal,
+  Logical,
   Unary,
   Variable,
 } from "./expr";
@@ -112,7 +113,7 @@ export class Parser {
   }
 
   private assignment(): Expr {
-    const expr = this.equality();
+    const expr = this.or();
 
     if (this.match(TokenType.EQUAL)) {
       let equals = this.previous();
@@ -124,6 +125,30 @@ export class Parser {
       }
 
       this.error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+  }
+
+  private or(): Expr {
+    let expr = this.and();
+
+    while (this.match(TokenType.OR)) {
+      const operator = this.previous();
+      const right = this.and();
+      expr = new Logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private and(): Expr {
+    let expr = this.equality();
+
+    while (this.match(TokenType.AND)) {
+      const operator = this.previous();
+      const right = this.equality();
+      expr = new Logical(expr, operator, right);
     }
 
     return expr;
