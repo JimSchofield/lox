@@ -9,7 +9,7 @@ import {
   Unary,
   Variable,
 } from "./expr";
-import { Expression, Print, Stmt, Var, Block, If } from "./stmt";
+import { Expression, Print, Stmt, Var, Block, If, While } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./tokenTypes";
 import { isDefined } from "./util";
@@ -62,6 +62,9 @@ export class Parser {
     if (this.match(TokenType.PRINT)) {
       return this.printStatement();
     }
+    if (this.match(TokenType.WHILE)) {
+      return this.whileStatement();
+    }
     if (this.match(TokenType.LEFT_BRACE)) {
       return new Block(this.block());
     }
@@ -88,6 +91,15 @@ export class Parser {
     const value = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new Print(value);
+  }
+
+  private whileStatement(): Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+    const body = this.statement();
+
+    return new While(condition, body);
   }
 
   private expressionStatement(): Stmt {

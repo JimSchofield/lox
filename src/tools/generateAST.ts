@@ -27,6 +27,7 @@ class GenerateAST {
       "Expression : Expr expression",
       "Print      : Expr expression",
       "Var        : Token name, Expr|null initializer",
+      "While      : Expr condition, Stmt body",
     ]);
   }
 
