@@ -14,6 +14,7 @@ import {
 } from "./expr";
 import { LoxCallable } from "./loxCallable";
 import {LoxFunc} from "./loxFunc";
+import {Return} from "./return";
 import RuntimeError from "./runtimeError";
 import {
   Block,
@@ -21,6 +22,7 @@ import {
   Func as FuncStmt,
   If as IfStmt,
   Print as PrintStmt,
+  Return as ReturnStmt,
   Stmt,
   Var,
   Visitor as StmtVisitor,
@@ -303,5 +305,14 @@ export default class Interpreter
   public visitPrintStmt(stmt: PrintStmt): void {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
+  }
+
+  public visitReturnStmt(stmt: ReturnStmt): void {
+    let value = null;
+    if (stmt.value !== null) {
+      value = this.evaluate(stmt.value);
+    }
+
+    throw new Return(value);
   }
 }

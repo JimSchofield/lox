@@ -10,7 +10,7 @@ import {
   Unary,
   Variable,
 } from "./expr";
-import { Expression, Print, Stmt, Var, Block, If, While, Func } from "./stmt";
+import { Expression, Print, Stmt, Var, Block, If, While, Func, Return } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./tokenTypes";
 import { isDefined } from "./util";
@@ -68,6 +68,9 @@ export class Parser {
     }
     if (this.match(TokenType.PRINT)) {
       return this.printStatement();
+    }
+    if (this.match(TokenType.RETURN)) {
+      return this.returnStatement();
     }
     if (this.match(TokenType.WHILE)) {
       return this.whileStatement();
@@ -142,6 +145,17 @@ export class Parser {
     return new Print(value);
   }
 
+  private returnStatement(): Stmt {
+    const keyword = this.previous();
+    let value = null;
+    if (!this.check(TokenType.SEMICOLON)) {
+      value = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+    return new Return(keyword, value);
+  }
+
   private whileStatement(): Stmt {
     this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
     const condition = this.expression();
@@ -158,7 +172,10 @@ export class Parser {
   }
 
   private func(kind: string): Func {
-    const name = this.consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
+    const name = this.consume(
+      TokenType.IDENTIFIER,
+      "Expect " + kind + " name."
+    );
 
     this.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 
@@ -170,7 +187,8 @@ export class Parser {
         }
 
         parameters.push(
-            this.consume(TokenType.IDENTIFIER, "Expect parameter name."));
+          this.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+        );
       } while (this.match(TokenType.COMMA));
     }
 

@@ -29,6 +29,7 @@ class GenerateAST {
       "Func       : Token name, Token[] params," +
                   " Stmt[] body",
       "Print      : Expr expression",
+      "Return     : Token keyword, Expr|null value",
       "Var        : Token name, Expr|null initializer",
       "While      : Expr condition, Stmt body",
     ]);

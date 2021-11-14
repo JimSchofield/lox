@@ -1,6 +1,7 @@
 import Environment from "./environment";
 import Interpreter from "./interpreter";
 import { LoxCallable } from "./loxCallable";
+import {Return} from "./return";
 import { Func } from "./stmt";
 import { LiteralType } from "./token";
 
@@ -20,7 +21,11 @@ export class LoxFunc implements LoxCallable {
       environment.define(this.declaration.params[i].lexeme, args[i]);
     }
 
-    interpreter.executeBlock(this.declaration.body, environment);
+    try {
+      interpreter.executeBlock(this.declaration.body, environment);
+    } catch (returnValue) {
+      return (returnValue as Return).value;
+    }
 
     return null;
   }
