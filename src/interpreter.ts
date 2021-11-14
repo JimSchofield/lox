@@ -184,10 +184,14 @@ export default class Interpreter
         if (typeof left === "string" && typeof right === "string") {
           return left + right;
         }
-
+        if ((typeof left === "string" && typeof right === "number") ||
+            (typeof left === "number" && typeof right === "string")) {
+          return left.toString() + right.toString();
+        }
+        
         throw new RuntimeError(
           expr.operator,
-          "Can only (+) two numbers or two strings"
+          "Can only (+) numbers and strings"
         );
         break;
       case TokenType.SLASH:
