@@ -1,0 +1,14 @@
+fun countDown(num) {
+  if (num >= 1) {
+    print(num);
+    countDown(num - 1);
+  }
+
+  if (num == 0) {
+    print("Blast off!");
+  }
+}
+
+countDown(10);
+
+countDown(5);

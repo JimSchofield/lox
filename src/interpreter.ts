@@ -1,13 +1,59 @@
 import Lox from ".";
 import Environment from "./environment";
-import { Assign, Binary, Expr, Grouping, Literal, Logical, Unary, Variable, Visitor as ExprVisitor } from "./expr";
+import {
+  Assign,
+  Binary,
+  Call,
+  Expr,
+  Grouping,
+  Literal,
+  Logical,
+  Unary,
+  Variable,
+  Visitor as ExprVisitor,
+} from "./expr";
+import { LoxCallable } from "./loxCallable";
+import {LoxFunc} from "./loxFunc";
 import RuntimeError from "./runtimeError";
-import { Block, Expression as ExprStmt, If as IfStmt, Print as PrintStmt, Stmt, Var, Visitor as StmtVisitor, While as WhileStmt } from "./stmt";
+import {
+  Block,
+  Expression as ExprStmt,
+  Func as FuncStmt,
+  If as IfStmt,
+  Print as PrintStmt,
+  Stmt,
+  Var,
+  Visitor as StmtVisitor,
+  While as WhileStmt,
+} from "./stmt";
 import Token, { LiteralType } from "./token";
 import { TokenType } from "./tokenTypes";
 
-export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisitor<void> {
-  private environment = new Environment();
+export default class Interpreter
+  implements ExprVisitor<LiteralType>, StmtVisitor<void>
+{
+  readonly globals = new Environment();
+  private environment = this.globals;
+
+  constructor() {
+    // TODO: Investigate why are we defining clock on the fly?
+    this.globals.define(
+      "clock",
+      new (class implements LoxCallable {
+        public get arity() {
+          return 0;
+        }
+
+        public loxCall(interpreter: Interpreter, args: LiteralType[]) {
+          return Date.now() / 1000.0;
+        }
+
+        public toString(): string {
+          return "<native fn>";
+        }
+      })()
+    );
+  }
 
   public visitLiteralExpr(expr: Literal): LiteralType {
     return expr.value;
@@ -47,7 +93,7 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
       }
     } finally {
       this.environment = previous;
-    } 
+    }
   }
 
   public visitAssignExpr(expr: Assign): LiteralType {
@@ -56,7 +102,7 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
     return value;
   }
 
-  public visitVarStmt(stmt: Var ): void {
+  public visitVarStmt(stmt: Var): void {
     let value = null;
     if (stmt.initializer != null) {
       value = this.evaluate(stmt.initializer);
@@ -137,7 +183,10 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
           return left + right;
         }
 
-        throw new RuntimeError(expr.operator, "Can only (+) two numbers or two strings")
+        throw new RuntimeError(
+          expr.operator,
+          "Can only (+) two numbers or two strings"
+        );
         break;
       case TokenType.SLASH:
         this.checkNumberOperands(expr.operator, left, right);
@@ -156,6 +205,34 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
     return null;
   }
 
+  public visitCallExpr(expr: Call): LiteralType {
+    const callee = this.evaluate(expr.callee);
+
+    const args: LiteralType[] = [];
+    for (const arg of expr.args) {
+      args.push(this.evaluate(arg));
+    }
+
+    // Not sure how to implement this in javascript
+    //
+    // if (!(callee instanceof LoxCallable)) {
+    //   throw new RuntimeError(expr.paren,
+    //       "Can only call functions and classes.");
+    // }
+
+    // casting to callable despite being literal type
+    const func = callee as unknown as LoxCallable;
+
+    if (args.length != func.arity) {
+      throw new RuntimeError(
+        expr.paren,
+        "Expected " + func.arity + " arguments but got " + args.length + "."
+      );
+    }
+
+    return func.loxCall(this, args);
+  }
+
   private isEqual(a: LiteralType, b: LiteralType): boolean {
     if (a == null && b == null) {
       return true;
@@ -167,9 +244,13 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
     return a == b;
   }
 
-  private checkNumberOperands(operator: Token, left: LiteralType, right: LiteralType): void {
-    if (typeof left === "number"&& typeof right === "number") return;
-    
+  private checkNumberOperands(
+    operator: Token,
+    left: LiteralType,
+    right: LiteralType
+  ): void {
+    if (typeof left === "number" && typeof right === "number") return;
+
     throw new RuntimeError(operator, "Operands must be numbers.");
   }
 
@@ -179,16 +260,19 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
         this.execute(statement);
       }
     } catch (error) {
-      Lox.errorWithToken((error as RuntimeError).token, (error as RuntimeError).message);
+      Lox.errorWithToken(
+        (error as RuntimeError).token,
+        (error as RuntimeError).message
+      );
     }
   }
 
   private execute(stmt: Stmt): void {
     stmt.accept(this);
   }
-  
+
   private stringify(obj: LiteralType): string {
-  if (obj == null) return "nil";
+    if (obj == null) return "nil";
 
     if (typeof obj === "number") {
       return obj.toString();
@@ -196,12 +280,17 @@ export default class Interpreter implements ExprVisitor<LiteralType>, StmtVisito
 
     return obj.toString();
   }
-  
+
   public visitExpressionStmt(stmt: ExprStmt): void {
     this.evaluate(stmt.expression);
   }
 
-  public visitIfStmt(stmt: IfStmt): void{
+  public visitFuncStmt(stmt: FuncStmt): void {
+    const func = new LoxFunc(stmt);
+    this.environment.define(stmt.name.lexeme, func);
+  }
+
+  public visitIfStmt(stmt: IfStmt): void {
     if (this.isTruthy(this.evaluate(stmt.condition))) {
       this.execute(stmt.thenBranch);
     } else if (stmt.elseBranch) {
