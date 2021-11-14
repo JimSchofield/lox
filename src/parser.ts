@@ -172,10 +172,12 @@ export class Parser {
   }
 
   private func(kind: string): Func {
-    const name = this.consume(
+    debugger;
+    console.log("test");
+    const name = this.check(TokenType.IDENTIFIER) ? this.consume(
       TokenType.IDENTIFIER,
       "Expect " + kind + " name."
-    );
+    ) : new Token(TokenType.FUN, `Anonymous-${Date.now}`, '', this.previous().line);
 
     this.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 
@@ -186,9 +188,15 @@ export class Parser {
           this.error(this.peek(), "Can't have more than 255 parameters.");
         }
 
-        parameters.push(
-          this.consume(TokenType.IDENTIFIER, "Expect parameter name.")
-        );
+        let anonFunc = this.check(TokenType.FUN) ? this.func('anonymousFunction') : null;
+
+        if (anonFunc) {
+          parameters.push(anonFunc.name);
+        } else {
+          parameters.push(
+            this.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+          );
+        }
       } while (this.match(TokenType.COMMA));
     }
 

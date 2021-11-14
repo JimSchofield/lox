@@ -65,8 +65,11 @@ export default class Lox {
     const scanner = new Scanner(source);
     const tokens = scanner.scanTokens();
 
+    debugger;
+
     const parser = new Parser(tokens);
     const expressions = parser.parse();
+
 
     if (expressions !== null) {
       this.interpreter.interpret(expressions);
