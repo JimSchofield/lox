@@ -36,6 +36,7 @@ export default class Interpreter
 {
   readonly globals = new Environment();
   private environment = this.globals;
+  private readonly locals = new Map<Expr, number>();
 
   constructor() {
     // TODO: Investigate why are we defining clock on the fly?
@@ -100,6 +101,14 @@ export default class Interpreter
 
   public visitAssignExpr(expr: Assign): LiteralType {
     const value = this.evaluate(expr.value);
+
+    const distance = this.locals.get(expr);
+    if (distance) {
+      this.environment.assignAt(distance, expr.name, value);
+    } else {
+      this.globals.assign(expr.name, value);
+    }
+
     this.environment.assign(expr.name, value);
     return value;
   }
@@ -120,7 +129,16 @@ export default class Interpreter
   }
 
   public visitVariableExpr(expr: Variable): any {
-    return this.environment.get(expr.name);
+    return this.lookUpVariable(expr.name, expr);
+  }
+
+  private lookUpVariable(name: Token, expr: Expr): any {
+    const distance = this.locals.get(expr);
+    if (distance) {
+      return this.environment.getAt(distance, name.lexeme);
+    } else {
+      return this.globals.get(name);
+    }
   }
 
   public visitUnaryExpr(expr: Unary): LiteralType {
@@ -275,6 +293,10 @@ export default class Interpreter
 
   private execute(stmt: Stmt): void {
     stmt.accept(this);
+  }
+
+  public resolve(expr: Expr, depth: number) {
+    this.locals.set(expr, depth);
   }
 
   private stringify(obj: LiteralType): string {

@@ -6,6 +6,7 @@ import Token from "./token";
 import { TokenType } from "./tokenTypes";
 import { Parser } from "./parser";
 import Interpreter from "./interpreter";
+import { Resolver } from "./resolver";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -16,7 +17,6 @@ export default class Lox {
   static hadError = false;
   interpreter = new Interpreter();
   constructor() {
-
     if (argv.length > 3) {
       console.log("Usage: jlox [script]");
       process.exit(1);
@@ -66,10 +66,15 @@ export default class Lox {
     const tokens = scanner.scanTokens();
 
     const parser = new Parser(tokens);
-    const expressions = parser.parse();
+    const statements = parser.parse();
 
-    if (expressions !== null) {
-      this.interpreter.interpret(expressions);
+    const resolver = new Resolver(this.interpreter);
+    resolver.resolve(statements);
+
+    if (Lox.hadError) return;
+
+    if (statements !== null) {
+      this.interpreter.interpret(statements);
     }
   }
 
