@@ -1,6 +1,16 @@
+import { LoxClass } from "./loxClass";
+import { LoxFunc } from "./loxFunc";
+import { LoxInstance } from "./loxInstance";
 import { TokenType } from "./tokenTypes";
 
-export type LiteralType = number | string | boolean | null;
+export type LiteralType =
+  | LoxClass
+  | LoxFunc
+  | LoxInstance
+  | number
+  | string
+  | boolean
+  | null;
 
 export default class Token {
   readonly type: TokenType;

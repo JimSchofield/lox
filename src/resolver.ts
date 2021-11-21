@@ -4,6 +4,7 @@ import {
   Binary,
   Call,
   Expr,
+  Get,
   Grouping,
   Literal,
   Logical,
@@ -22,6 +23,7 @@ import {
   Print as PrintStmt,
   Return as ReturnStmt,
   While as WhileStmt,
+  Class,
 } from "./stmt";
 import Token from "./token";
 import Lox from ".";
@@ -45,6 +47,11 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     this.beginScope();
     this.resolve(stmt.statements);
     this.endScope();
+  }
+
+  public visitClassStmt(stmt: Class): void {
+    this.declare(stmt.name);
+    this.define(stmt.name);
   }
 
   public visitExpressionStmt(stmt: ExpressionStmt): void {
@@ -163,6 +170,10 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     for (let arg of expr.args) {
       this.resolve(arg);
     }
+  }
+
+  public visitGetExpr(expr: Get): void {
+    this.resolve(expr.object);
   }
 
   public visitGroupingExpr(expr: Grouping): void {

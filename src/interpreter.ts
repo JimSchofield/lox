@@ -5,6 +5,7 @@ import {
   Binary,
   Call,
   Expr,
+  Get,
   Grouping,
   Literal,
   Logical,
@@ -13,11 +14,14 @@ import {
   Visitor as ExprVisitor,
 } from "./expr";
 import { LoxCallable } from "./loxCallable";
-import {LoxFunc} from "./loxFunc";
-import {Return} from "./return";
+import { LoxClass } from "./loxClass";
+import { LoxFunc } from "./loxFunc";
+import { LoxInstance } from "./loxInstance";
+import { Return } from "./return";
 import RuntimeError from "./runtimeError";
 import {
   Block,
+  Class as ClassStmt,
   Expression as ExprStmt,
   Func as FuncStmt,
   If as IfStmt,
@@ -84,6 +88,12 @@ export default class Interpreter
 
   public visitBlockStmt(stmt: Block): void {
     this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  public visitClassStmt(stmt: ClassStmt): void {
+    this.environment.define(stmt.name.lexeme, null);
+    const klass = new LoxClass(stmt.name.lexeme);
+    this.environment.assign(stmt.name, klass);
   }
 
   public executeBlock(statements: Stmt[], environment: Environment) {
@@ -202,11 +212,13 @@ export default class Interpreter
         if (typeof left === "string" && typeof right === "string") {
           return left + right;
         }
-        if ((typeof left === "string" && typeof right === "number") ||
-            (typeof left === "number" && typeof right === "string")) {
+        if (
+          (typeof left === "string" && typeof right === "number") ||
+          (typeof left === "number" && typeof right === "string")
+        ) {
           return left.toString() + right.toString();
         }
-        
+
         throw new RuntimeError(
           expr.operator,
           "Can only (+) numbers and strings"
@@ -237,14 +249,16 @@ export default class Interpreter
       args.push(this.evaluate(arg));
     }
 
-    // Not sure how to implement this in javascript
-    //
-    // if (!(callee instanceof LoxCallable)) {
-    //   throw new RuntimeError(expr.paren,
-    //       "Can only call functions and classes.");
-    // }
+    // @ts-ignore We need the runtime check
+    if (!(callee instanceof LoxFunc) && !(callee instanceof LoxClass)) {
+      throw new RuntimeError(
+        expr.paren,
+        "Can only call functions and classes."
+      );
+    }
 
     // casting to callable despite being literal type
+    // At this point, it is callable
     const func = callee as unknown as LoxCallable;
 
     if (args.length != func.arity) {
@@ -255,6 +269,15 @@ export default class Interpreter
     }
 
     return func.loxCall(this, args);
+  }
+
+  public visitGetExpr(expr: Get): LiteralType {
+    const object = this.evaluate(expr.object);
+    if (object instanceof LoxInstance) {
+      return LoxInstance.get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name, "Only instances have properties.");
   }
 
   private isEqual(a: LiteralType, b: LiteralType): boolean {

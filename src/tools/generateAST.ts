@@ -14,6 +14,7 @@ class GenerateAST {
       "Assign   : Token name, Expr value",
       "Binary   : Expr left, Token operator, Expr right",
       "Call     : Expr callee, Token paren, Expr[] args",
+      "Get      : Expr object, Token name",
       "Grouping : Expr expression",
       "Literal  : LiteralType value",
       "Logical  : Expr left, Token operator, Expr right",
@@ -23,6 +24,7 @@ class GenerateAST {
 
     this.defineAst(outputDir, "Stmt", [
       "Block      : Stmt[] statements",
+      "Class      : Token name, Func[] methods",
       "If         : Expr condition, Stmt thenBranch," +
                   " Stmt|null elseBranch",
       "Expression : Expr expression",

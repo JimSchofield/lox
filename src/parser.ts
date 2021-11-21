@@ -4,13 +4,25 @@ import {
   Binary,
   Call,
   Expr,
+  Get,
   Grouping,
   Literal,
   Logical,
   Unary,
   Variable,
 } from "./expr";
-import { Expression, Print, Stmt, Var, Block, If, While, Func, Return } from "./stmt";
+import {
+  Expression,
+  Print,
+  Stmt,
+  Var,
+  Block,
+  If,
+  While,
+  Func,
+  Return,
+  Class,
+} from "./stmt";
 import Token from "./token";
 import { TokenType } from "./tokenTypes";
 import { isDefined } from "./util";
@@ -34,6 +46,9 @@ export class Parser {
 
   private declaration(): Stmt | void {
     try {
+      if (this.match(TokenType.CLASS)) {
+        return this.classDeclaration();
+      }
       if (this.match(TokenType.FUN)) {
         return this.func("function");
       }
@@ -45,6 +60,20 @@ export class Parser {
     } catch (error) {
       this.synchronize();
     }
+  }
+
+  private classDeclaration(): Stmt {
+    const name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
+    this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+    const methods: Func[] = [];
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd) {
+      methods.push(this.func("method"));
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+
+    return new Class(name, methods);
   }
 
   private varDeclaration(): Stmt {
@@ -330,6 +359,12 @@ export class Parser {
     while (true) {
       if (this.match(TokenType.LEFT_PAREN)) {
         expr = this.finishCall(expr);
+      } else if (this.match(TokenType.DOT)) {
+        const name = this.consume(
+          TokenType.IDENTIFIER,
+          "Expect property name after '.'."
+        );
+        expr = new Get(expr, name);
       } else {
         break;
       }
