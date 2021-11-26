@@ -1,0 +1,10 @@
+class Bacon {
+  eat() {
+    print "Yummmmm";
+  }
+}
+
+var instance = Bacon();
+
+instance.eat();
+instance.eat();

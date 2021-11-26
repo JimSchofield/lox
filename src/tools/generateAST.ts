@@ -18,6 +18,7 @@ class GenerateAST {
       "Grouping : Expr expression",
       "Literal  : LiteralType value",
       "Logical  : Expr left, Token operator, Expr right",
+      "Set      : Expr object, Token name, Expr value",
       "Unary    : Token operator, Expr right",
       "Variable : Token name",
     ]);

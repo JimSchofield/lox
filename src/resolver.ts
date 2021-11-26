@@ -8,6 +8,7 @@ import {
   Grouping,
   Literal,
   Logical,
+  Set as SetExpr,
   Unary,
   Variable,
   Visitor as ExprVisitor,
@@ -31,6 +32,7 @@ import Lox from ".";
 enum FunctionType {
   NONE,
   FUNCTION,
+  METHOD,
 }
 
 export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
@@ -51,6 +53,12 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
   public visitClassStmt(stmt: Class): void {
     this.declare(stmt.name);
+
+    for (const method of stmt.methods) {
+      const declaration = FunctionType.METHOD;
+      this.resolveFunction(method, declaration); 
+    }
+
     this.define(stmt.name);
   }
 
@@ -185,6 +193,11 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   public visitLogicalExpr(expr: Logical): void {
     this.resolve(expr.left);
     this.resolve(expr.right);
+  }
+
+  public visitSetExpr(expr: SetExpr): void {
+    this.resolve(expr.value);
+    this.resolve(expr.object);
   }
 
   public visitUnaryExpr(expr: Unary): void {

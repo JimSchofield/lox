@@ -9,6 +9,7 @@ import {
   Grouping,
   Literal,
   Logical,
+  Set as SetExpr,
   Unary,
   Variable,
   Visitor as ExprVisitor,
@@ -78,6 +79,18 @@ export default class Interpreter
     return this.evaluate(expr.right);
   }
 
+  public visitSetExpr(expr: SetExpr) {
+    const object = this.evaluate(expr.object);
+
+    if (!(object instanceof LoxInstance)) {
+      throw new RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    const value = this.evaluate(expr.value);
+    object.set(expr.name, value);
+    return value;
+  }
+
   public visitGroupingExpr(expr: Grouping): LiteralType {
     return this.evaluate(expr.expression);
   }
@@ -92,7 +105,15 @@ export default class Interpreter
 
   public visitClassStmt(stmt: ClassStmt): void {
     this.environment.define(stmt.name.lexeme, null);
-    const klass = new LoxClass(stmt.name.lexeme);
+
+    const methods = new Map<string, LoxFunc>();
+    for (const method of stmt.methods) {
+      const func = new LoxFunc(method, this.environment);
+      methods.set(method.name.lexeme, func);
+    }
+
+    const klass = new LoxClass(stmt.name.lexeme, methods);
+
     this.environment.assign(stmt.name, klass);
   }
 
@@ -274,7 +295,7 @@ export default class Interpreter
   public visitGetExpr(expr: Get): LiteralType {
     const object = this.evaluate(expr.object);
     if (object instanceof LoxInstance) {
-      return LoxInstance.get(expr.name);
+      return object.get(expr.name);
     }
 
     throw new RuntimeError(expr.name, "Only instances have properties.");
