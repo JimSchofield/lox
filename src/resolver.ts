@@ -9,6 +9,7 @@ import {
   Literal,
   Logical,
   Set as SetExpr,
+  This,
   Unary,
   Variable,
   Visitor as ExprVisitor,
@@ -30,9 +31,9 @@ import Token from "./token";
 import Lox from ".";
 
 enum FunctionType {
-  NONE,
-  FUNCTION,
-  METHOD,
+  NONE = "NONE",
+  FUNCTION = "FUNCTION",
+  METHOD = "METHOD",
 }
 
 export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
@@ -54,12 +55,18 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   public visitClassStmt(stmt: Class): void {
     this.declare(stmt.name);
 
+    this.define(stmt.name);
+
+    this.beginScope();
+    const scope = this.scopes[this.scopes.length - 1];
+    scope.set("this", true);
+
     for (const method of stmt.methods) {
       const declaration = FunctionType.METHOD;
       this.resolveFunction(method, declaration); 
     }
 
-    this.define(stmt.name);
+    this.endScope();
   }
 
   public visitExpressionStmt(stmt: ExpressionStmt): void {
@@ -198,6 +205,10 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   public visitSetExpr(expr: SetExpr): void {
     this.resolve(expr.value);
     this.resolve(expr.object);
+  }
+
+  public visitThisExpr(expr: This): void {
+    this.resolveLocal(expr, expr.keyword);
   }
 
   public visitUnaryExpr(expr: Unary): void {

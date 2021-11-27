@@ -10,6 +10,7 @@ export default class Environment {
   }
 
   define(key: string, val: any):void {
+    console.log(key);
     this.values.set(key, val);
   }
 
@@ -17,7 +18,11 @@ export default class Environment {
     let environment: Environment = this;
     for (let i = 0; i < distance; i++) {
       // technically could have undefined, but not in nested closures
-      environment = environment.enclosing as Environment; 
+      if (environment.enclosing) {
+        environment = environment.enclosing; 
+      } else {
+        throw new Error("Nested environment doesn't exist! This is an internal lox bug");
+      }
     }
 
     return environment;

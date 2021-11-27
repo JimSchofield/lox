@@ -1,7 +1,7 @@
 import { argv } from "process";
 import fs from "fs";
-import readline from "readline";
 import Scanner from "./scanner";
+import readline from "readline";
 import Token from "./token";
 import { TokenType } from "./tokenTypes";
 import { Parser } from "./parser";

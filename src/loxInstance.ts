@@ -21,7 +21,7 @@ export class LoxInstance {
 
     const method = this.klass.findMethod(name.lexeme);
     if (method) {
-      return method;
+      return method.bind(this);
     }
 
     throw Lox.errorWithToken(name, "Undefined property '" + name.lexeme + "'.");

@@ -10,6 +10,7 @@ import {
   Literal,
   Logical,
   Set as SetExpr,
+  This,
   Unary,
   Variable,
   Visitor as ExprVisitor,
@@ -89,6 +90,10 @@ export default class Interpreter
     const value = this.evaluate(expr.value);
     object.set(expr.name, value);
     return value;
+  }
+
+  public visitThisExpr(expr: This): any {
+    return this.lookUpVariable(expr.keyword, expr);
   }
 
   public visitGroupingExpr(expr: Grouping): LiteralType {
@@ -293,6 +298,7 @@ export default class Interpreter
   }
 
   public visitGetExpr(expr: Get): LiteralType {
+    console.log("GET--", expr);
     const object = this.evaluate(expr.object);
     if (object instanceof LoxInstance) {
       return object.get(expr.name);
