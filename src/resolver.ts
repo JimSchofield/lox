@@ -33,6 +33,7 @@ import Lox from ".";
 enum FunctionType {
   NONE = "NONE",
   FUNCTION = "FUNCTION",
+  INITIALIZER = "INITIALIZER",
   METHOD = "METHOD",
 }
 
@@ -62,7 +63,10 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     scope.set("this", true);
 
     for (const method of stmt.methods) {
-      const declaration = FunctionType.METHOD;
+      let declaration = FunctionType.METHOD;
+      if (method.name.lexeme === "init") {
+        declaration = FunctionType.INITIALIZER;
+      }
       this.resolveFunction(method, declaration); 
     }
 
@@ -148,6 +152,10 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
     if (stmt.value !== null) {
       this.resolve(stmt.value);
+    }
+
+    if (this.currentFunction === FunctionType.INITIALIZER) {
+      Lox.errorWithToken(stmt.keyword, "Can't return a value from an initializer.");
     }
   }
 

@@ -20,11 +20,18 @@ export class LoxClass implements LoxCallable {
   public loxCall(interpreter: Interpreter, args: LiteralType[]): LiteralType {
     const instance = new LoxInstance(this);
 
+    const initializer = this.findMethod("init");
+    if (initializer) {
+      initializer.bind(instance).loxCall(interpreter, args);
+    }
+
     return instance;
   }
 
   public get arity(): number {
-    return 0;
+    const initializer = this.findMethod("init");
+    if (!initializer) return 0;
+    return initializer.arity;
   }
 
   public findMethod(name: string) {

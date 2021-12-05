@@ -1,0 +1,23 @@
+class Test {
+  init(initialValue) {
+    this.value = initialValue;
+
+    print "InitialValue: " + this.value;
+  }
+
+  changeValue(val) {
+    this.value = val;
+  }
+
+  showVal() {
+    print this.value;
+  }
+}
+
+var thing = Test("Orange");
+
+thing.showVal();
+
+thing.changeValue("Blue!");
+
+thing.showVal();
