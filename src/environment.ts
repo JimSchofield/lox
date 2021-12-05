@@ -10,7 +10,6 @@ export default class Environment {
   }
 
   define(key: string, val: any):void {
-    console.log(key);
     this.values.set(key, val);
   }
 

@@ -170,7 +170,7 @@ export default class Interpreter
 
   private lookUpVariable(name: Token, expr: Expr): any {
     const distance = this.locals.get(expr);
-    if (distance) {
+    if (typeof distance === 'number') {
       return this.environment.getAt(distance, name.lexeme);
     } else {
       return this.globals.get(name);
@@ -298,7 +298,6 @@ export default class Interpreter
   }
 
   public visitGetExpr(expr: Get): LiteralType {
-    console.log("GET--", expr);
     const object = this.evaluate(expr.object);
     if (object instanceof LoxInstance) {
       return object.get(expr.name);
