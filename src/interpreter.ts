@@ -170,7 +170,7 @@ export default class Interpreter
 
   private lookUpVariable(name: Token, expr: Expr): any {
     const distance = this.locals.get(expr);
-    if (distance) {
+    if (typeof distance === 'number') {
       return this.environment.getAt(distance, name.lexeme);
     } else {
       return this.globals.get(name);
