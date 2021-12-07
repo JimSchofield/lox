@@ -9,6 +9,7 @@ import {
   Literal,
   Logical,
   Set as SetExpr,
+  Super,
   This,
   Unary,
   Variable,
@@ -37,11 +38,17 @@ enum FunctionType {
   METHOD = "METHOD",
 }
 
+enum ClassType {
+  NONE = "NONE",
+  CLASS = "CLASS",
+  SUBCLASS = "SUBCLASS",
+}
+
 export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   private readonly interpreter: Interpreter;
   private readonly scopes: Map<string, boolean>[] = [];
   private currentFunction = FunctionType.NONE;
-
+  private currentClass = ClassType.NONE;
 
   constructor(interpreter: Interpreter) {
     this.interpreter = interpreter;
@@ -58,6 +65,23 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
 
     this.define(stmt.name);
 
+    if (stmt.superclass && stmt.name.lexeme === stmt.superclass.name.lexeme) {
+      Lox.errorWithToken(
+        stmt.superclass.name,
+        "A class can't inherit from itself."
+      );
+    }
+
+    if (stmt.superclass) {
+      this.currentClass = ClassType.SUBCLASS;
+      this.resolve(stmt.superclass);
+    }
+
+    if (stmt.superclass) {
+      this.beginScope();
+      this.scopes[this.scopes.length - 1].set("super", true);
+    }
+
     this.beginScope();
     const scope = this.scopes[this.scopes.length - 1];
     scope.set("this", true);
@@ -67,7 +91,11 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
       if (method.name.lexeme === "init") {
         declaration = FunctionType.INITIALIZER;
       }
-      this.resolveFunction(method, declaration); 
+      this.resolveFunction(method, declaration);
+    }
+
+    if (stmt.superclass) {
+      this.endScope();
     }
 
     this.endScope();
@@ -155,7 +183,10 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
     }
 
     if (this.currentFunction === FunctionType.INITIALIZER) {
-      Lox.errorWithToken(stmt.keyword, "Can't return a value from an initializer.");
+      Lox.errorWithToken(
+        stmt.keyword,
+        "Can't return a value from an initializer."
+      );
     }
   }
 
@@ -213,6 +244,19 @@ export class Resolver implements ExprVisitor<void>, StmtVisitor<void> {
   public visitSetExpr(expr: SetExpr): void {
     this.resolve(expr.value);
     this.resolve(expr.object);
+  }
+
+  public visitSuperExpr(expr: Super): void {
+    if (this.currentClass === ClassType.NONE) {
+      Lox.errorWithToken(expr.keyword, "Can't use 'super' outside of a class.");
+    } else if (this.currentClass !== ClassType.SUBCLASS) {
+      Lox.errorWithToken(
+        expr.keyword,
+        "Can't use 'super' in a class with no superclass."
+      );
+    }
+
+    this.resolveLocal(expr, expr.keyword);
   }
 
   public visitThisExpr(expr: This): void {

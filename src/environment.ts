@@ -2,7 +2,7 @@ import RuntimeError from "./runtimeError";
 import Token from "./token";
 
 export default class Environment {
-  private enclosing?: Environment;
+  public enclosing?: Environment;
   private values: Map<string, any> = new Map();
 
   constructor(enclosing?: Environment) {

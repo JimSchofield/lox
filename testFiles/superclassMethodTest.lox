@@ -1,0 +1,16 @@
+class Doughnut {
+  init() {
+    this.property = "yummy lookin";
+  }
+  cook() {
+    print "Fry until " + this.property;
+  }
+}
+
+class BostonCream < Doughnut {
+  init() {
+    this.property = "awesome lookin";
+  }
+}
+
+BostonCream().cook();

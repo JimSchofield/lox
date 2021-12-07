@@ -7,9 +7,11 @@ import { LiteralType } from "./token";
 export class LoxClass implements LoxCallable {
   readonly name: string;
   private readonly methods: Map<string, LoxFunc>;
+  private superclass: LoxClass | null;
 
-  constructor(name: string, methods: Map<string, LoxFunc>) {
+  constructor(name: string, superclass: LoxClass | null, methods: Map<string, LoxFunc>) {
     this.name = name;
+    this.superclass = superclass;
     this.methods = methods;
   }
 
@@ -34,9 +36,13 @@ export class LoxClass implements LoxCallable {
     return initializer.arity;
   }
 
-  public findMethod(name: string) {
+  public findMethod(name: string): LoxFunc | undefined {
     if (this.methods.has(name)) {
       return this.methods.get(name);
+    }
+
+    if (this.superclass) {
+      return this.superclass.findMethod(name);
     }
   }
 }

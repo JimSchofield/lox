@@ -10,6 +10,7 @@ import {
   Literal,
   Logical,
   Set as SetExpr,
+  Super,
   This,
   Unary,
   Variable,
@@ -41,7 +42,7 @@ export default class Interpreter
   implements ExprVisitor<LiteralType>, StmtVisitor<void>
 {
   readonly globals = new Environment();
-  private environment = this.globals;
+  public environment = this.globals;
   private readonly locals = new Map<Expr, number>();
 
   constructor() {
@@ -92,6 +93,26 @@ export default class Interpreter
     return value;
   }
 
+  public visitSuperExpr(expr: Super) {
+    let distance = this.locals.get(expr);
+
+    if (distance) {
+      const superclass = this.environment.getAt(distance, "super");
+
+      const object = this.environment.getAt(distance - 1, "this");
+
+      const method = superclass.findMethod(expr.method.lexeme);
+
+      if (!method) {
+        throw new Error("Undefined property '" + expr.method.lexeme + "' on superclass.");
+      }
+      
+      return method.bind(object);
+    } else {
+      throw new Error("Distance is undefined in `visitSuperExpr`");
+    }
+  }
+
   public visitThisExpr(expr: This): any {
     return this.lookUpVariable(expr.keyword, expr);
   }
@@ -109,7 +130,20 @@ export default class Interpreter
   }
 
   public visitClassStmt(stmt: ClassStmt): void {
+    let superclass = null;
+    if (stmt.superclass) {
+      superclass = this.evaluate(stmt.superclass);
+      if (!(superclass instanceof LoxClass)) {
+        throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+      }
+    }
+
     this.environment.define(stmt.name.lexeme, null);
+
+    if (stmt.superclass) {
+      this.environment = new Environment(this.environment);
+      this.environment.define("super", superclass);
+    }
 
     const methods = new Map<string, LoxFunc>();
     for (const method of stmt.methods) {
@@ -117,7 +151,13 @@ export default class Interpreter
       methods.set(method.name.lexeme, func);
     }
 
-    const klass = new LoxClass(stmt.name.lexeme, methods);
+    // const klass = new LoxClass(stmt.name.lexeme, methods);
+    const klass = new LoxClass(stmt.name.lexeme, superclass, methods);
+
+    if (superclass) {
+      // At this point type should be narrowed to not be undefined
+      this.environment = this.environment.enclosing as Environment;
+    }
 
     this.environment.assign(stmt.name, klass);
   }
